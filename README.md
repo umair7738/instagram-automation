@@ -279,6 +279,8 @@ A successful POST normally produces these log entries:
 
 For a full symptom-by-symptom diagnostic runbook based on the issues encountered while configuring this project, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
+For the product demo flow, readiness language, and CEO pre-review checklist, see [docs/CEO_REVIEW.md](docs/CEO_REVIEW.md).
+
 ### Meta says verification succeeded, but no database row appears
 
 Verification is a GET request and does not create a webhook event row. Use Meta's webhook **Test** or send a real event; those are POST requests.

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AutomationRuleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstagramAccountController;
@@ -25,6 +26,7 @@ Route::view('terms-of-service', 'legal.terms-of-service')->name('terms-of-servic
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::resource('accounts', InstagramAccountController::class)->except('show');
     Route::resource('resources', MediaResourceController::class)->except('show');
     Route::resource('templates', MessageTemplateController::class)->except('show');
