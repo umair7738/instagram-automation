@@ -2,6 +2,16 @@
 
 A Laravel application for Instagram comment and messaging automations. It receives Meta webhooks, stores events, matches active rules, and queues replies for delivery.
 
+## Project stack
+
+- Laravel 12 on PHP 8.2+
+- MySQL or MariaDB
+- Laravel database-backed queue, cache, and sessions
+- Blade views with Bootstrap 5 loaded from a CDN
+- Meta Graph API and Meta Webhooks
+
+Node.js, npm, Vite, Redis, Docker, and SQLite are not required to run the current application. Some related files remain from the Laravel project scaffold, but the application pages do not depend on them.
+
 ## What the application does
 
 - Connects an Instagram professional account through Meta OAuth.
@@ -15,12 +25,11 @@ A Laravel application for Instagram comment and messaging automations. It receiv
 
 Install these before starting:
 
-- PHP 8.2 or newer with `pdo_sqlite`, `mbstring`, and `openssl` enabled.
+- PHP 8.2 or newer with `pdo_mysql`, `curl`, `mbstring`, and `openssl` enabled.
 - Composer.
-- Node.js and npm (only needed to build the frontend assets).
-- SQLite, or another database supported by Laravel.
+- MySQL or MariaDB. XAMPP MySQL and phpMyAdmin are suitable for local development.
 - A Meta developer account and an Instagram professional account for webhook testing.
-- An HTTPS URL that Meta can reach. For local development, use Cloudflare Tunnel or ngrok.
+- A public HTTPS URL that Meta can reach. This can be a hosted domain or a temporary tunnel during local development.
 
 On Windows, XAMPP's PHP can be used instead of a separate PHP installation. Replace `php` in the commands below with the full path to `php.exe` when needed.
 
@@ -35,7 +44,6 @@ cd instagram-automation
 
 ```bash
 composer install
-npm install
 ```
 
 ## 3. Create the local environment
@@ -58,21 +66,21 @@ Never commit `.env`. It contains credentials and is ignored by Git.
 
 ## 4. Create and migrate the database
 
-The default configuration uses SQLite and a database-backed queue, cache, and session store.
+Start MySQL, then create an empty database named `instagram_automation`. You can create it in phpMyAdmin or run:
+
+```sql
+CREATE DATABASE instagram_automation
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+```
+
+Set the matching `DB_*` values in `.env`, then run:
 
 ```bash
-touch database/database.sqlite
 php artisan migrate
 ```
 
-PowerShell equivalent:
-
-```powershell
-New-Item -ItemType File -Force database/database.sqlite
-php artisan migrate
-```
-
-If you choose MySQL or PostgreSQL instead, change the `DB_*` values in `.env` before running the migration.
+The same MySQL connection stores application data, sessions, cache entries, and queued jobs.
 
 ## 5. Configure `.env`
 
@@ -84,7 +92,13 @@ APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://127.0.0.1:8000
 
-DB_CONNECTION=sqlite
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=instagram_automation
+DB_USERNAME=root
+DB_PASSWORD=
+
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 SESSION_DRIVER=database
@@ -99,13 +113,9 @@ META_OAUTH_REDIRECT_URI=https://your-public-host.example/meta/callback
 
 `META_APP_ID`, `META_APP_SECRET`, and `META_WEBHOOK_VERIFY_TOKEN` must all belong to the same Meta app. If you switch Meta apps, update all three values and reconnect the Instagram account.
 
-## 6. Build the frontend
+## 6. Frontend assets
 
-```bash
-npm run build
-```
-
-During active frontend development, use `npm run dev` instead.
+No frontend build is required. The authenticated application layouts and legal pages load Bootstrap 5 from a CDN and use server-rendered Blade templates. Node.js and npm are therefore optional and are not part of the normal setup.
 
 ## 7. Start Laravel and the queue worker
 
@@ -125,31 +135,41 @@ php artisan queue:work database --sleep=1 --tries=3 --timeout=90
 
 Open `http://127.0.0.1:8000`, register a local user, and sign in.
 
-## 8. Expose the app over HTTPS for Meta
+## 8. Give Meta a public HTTPS URL
 
-Start Laravel before starting the tunnel.
+Meta cannot call `localhost` or `127.0.0.1`. It needs a public HTTPS address for OAuth redirects and webhooks.
 
-With Cloudflare Tunnel:
+If the application is deployed on a server with HTTPS, use that domain and skip tunneling completely.
+
+For local development, start Laravel first and expose `http://127.0.0.1:8000` using any tunnel provider. Examples include Cloudflare Tunnel and ngrok.
+
+Cloudflare Tunnel example:
 
 ```bash
 cloudflared tunnel --url http://127.0.0.1:8000
 ```
 
-If `cloudflared` is stored locally, use its local path instead. The executable is intentionally ignored by Git and must be installed separately on each machine.
+ngrok example:
+
+```bash
+ngrok http 8000
+```
+
+These tools are development conveniences, not application dependencies. Install and use whichever tunnel provider you prefer. A production deployment should use its own stable HTTPS domain.
 
 Copy the generated HTTPS hostname, for example:
 
 ```text
-https://random-name.trycloudflare.com
+https://your-public-domain.example
 ```
 
 Update `META_OAUTH_REDIRECT_URI` to:
 
 ```text
-https://random-name.trycloudflare.com/meta/callback
+https://your-public-domain.example/meta/callback
 ```
 
-A temporary tunnel hostname changes when the tunnel is restarted. Update both `.env` and Meta whenever it changes.
+If a temporary tunnel hostname changes, update both `.env` and the matching Meta settings. A hosted domain normally remains unchanged.
 
 ## 9. Configure the Meta app
 
@@ -161,14 +181,14 @@ In Meta for Developers, open the app whose ID is in `META_APP_ID`.
 2. In Facebook Login for Business, add this exact valid OAuth redirect URI:
 
    ```text
-   https://random-name.trycloudflare.com/meta/callback
+   https://your-public-domain.example/meta/callback
    ```
 
 3. Add the public privacy policy and data deletion URLs if Meta requests them:
 
    ```text
-   https://random-name.trycloudflare.com/privacy-policy
-   https://random-name.trycloudflare.com/data-deletion
+   https://your-public-domain.example/privacy-policy
+   https://your-public-domain.example/data-deletion
    ```
 
 ### Webhooks
@@ -177,7 +197,7 @@ In Meta for Developers, open the app whose ID is in `META_APP_ID`.
 2. Use this callback URL:
 
    ```text
-   https://random-name.trycloudflare.com/webhooks/meta
+   https://your-public-domain.example/webhooks/meta
    ```
 
 3. Enter the exact value of `META_WEBHOOK_VERIFY_TOKEN` from `.env`.
@@ -221,6 +241,8 @@ Run the automated tests:
 php artisan test
 ```
 
+GitHub Actions uses a temporary SQLite database only for isolated automated tests. The application setup described above uses MySQL or MariaDB.
+
 Confirm the webhook route exists:
 
 ```bash
@@ -263,9 +285,9 @@ Verification is a GET request and does not create a webhook event row. Use Meta'
 
 The app secret does not match the Meta app that sent the request. Check that the webhook URL, `META_APP_ID`, and `META_APP_SECRET` all refer to the same Meta app, then restart Laravel and reconnect the account.
 
-### The request reaches Cloudflare but Laravel logs nothing
+### The public URL receives a request but Laravel logs nothing
 
-Check that Laravel is running on `127.0.0.1:8000` and the tunnel forwards to that exact address. Confirm the callback path is `/webhooks/meta` (plural `webhooks`).
+For local development, check that Laravel is running on `127.0.0.1:8000` and the chosen tunnel forwards to that exact address. For hosted environments, check the web server and PHP logs. Confirm the callback path is `/webhooks/meta` (plural `webhooks`).
 
 ### The webhook is received but automation does not run
 
@@ -275,7 +297,7 @@ Keep `php artisan queue:work` running. Check that the rule is active, the keywor
 
 The Laravel pipeline can receive and process the event, but Meta controls messaging capability and permission approval. App Review, Advanced Access, business verification, or Live mode may be required. This cannot be bypassed in application code.
 
-### A tunnel URL changed
+### The public URL changed
 
 Update `META_OAUTH_REDIRECT_URI`, the Meta OAuth redirect allowlist, the Meta webhook callback URL, and the app domain. Reconnect the account if the OAuth redirect changed.
 
@@ -294,7 +316,7 @@ Before deploying publicly:
 
 ## Security
 
-Never commit `.env`, access tokens, app secrets, webhook verify tokens, SQLite files, runtime logs, or local binaries. The repository ignores these files by default. If a credential is exposed, revoke or rotate it immediately in Meta.
+Never commit `.env`, database exports, access tokens, app secrets, webhook verify tokens, runtime logs, or local binaries. The repository ignores these files by default. If a credential is exposed, revoke or rotate it immediately in Meta.
 
 ## License
 
