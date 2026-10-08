@@ -171,43 +171,22 @@ https://your-public-domain.example/meta/callback
 
 If a temporary tunnel hostname changes, update both `.env` and the matching Meta settings. A hosted domain normally remains unchanged.
 
-## 9. Configure the Meta app
+## 9. Configure Meta
 
-In Meta for Developers, open the app whose ID is in `META_APP_ID`.
+This is the part that cannot be inferred from the Laravel screens. Follow the separate [Meta setup guide](docs/META_SETUP.md) before trying to connect an account. It explains the Meta dashboard clicks, the two URLs that must be entered, permissions, testers, webhook verification, and the limits on DMs.
 
-### App settings
+The short version is:
 
-1. Add the public hostname under **App domains**. Enter only the hostname, without `https://` or a path.
-2. In Facebook Login for Business, add this exact valid OAuth redirect URI:
+1. Create or open the Meta app whose ID is in `META_APP_ID`.
+2. Add your public hostname under **App domains**.
+3. Add the exact OAuth URL `https://PUBLIC-HOST/meta/callback` under **Valid OAuth Redirect URIs**.
+4. Configure the webhook URL `https://PUBLIC-HOST/webhooks/meta` and the exact `META_WEBHOOK_VERIFY_TOKEN`.
+5. Click **Verify and save**, then subscribe to the supported Instagram comment fields.
+6. Add testers in Meta if the app is in Development mode, and have each tester accept the invitation.
 
-   ```text
-   https://your-public-domain.example/meta/callback
-   ```
+Do not test by opening the webhook URL in a normal browser. Meta's **Verify and save** action sends the verification request; Meta's webhook **Test** action and real Instagram activity send event POST requests.
 
-3. Add the public privacy policy and data deletion URLs if Meta requests them:
-
-   ```text
-   https://your-public-domain.example/privacy-policy
-   https://your-public-domain.example/data-deletion
-   ```
-
-### Webhooks
-
-1. Open the app's Webhooks configuration.
-2. Use this callback URL:
-
-   ```text
-   https://your-public-domain.example/webhooks/meta
-   ```
-
-3. Enter the exact value of `META_WEBHOOK_VERIFY_TOKEN` from `.env`.
-4. Click **Verify and save**.
-5. Subscribe to the Instagram/Page fields required by the app, such as comments/feed and messages.
-6. Use Meta's **Test** action to send a sample event.
-
-Do not test by opening the webhook URL in a normal browser. The browser sends an ordinary GET request; Meta's verification and webhook test actions are the meaningful checks.
-
-For production users, Meta may require App Review, Advanced Access, business verification, and an app in Live mode. Development-mode testing is limited to approved testers and the capabilities Meta grants to the app.
+Meta may require App Review, Advanced Access, business verification, and Live mode before private messaging works for people who are not app testers. This is a Meta access requirement, not a Laravel setting. Public comment webhooks and public replies can be tested separately.
 
 ## 10. Connect Instagram in the application
 
