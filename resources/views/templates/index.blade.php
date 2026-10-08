@@ -1,0 +1,2 @@
+@extends('layouts.app')
+@section('content')<div class="d-flex justify-content-between mb-3"><h1 class="h3">Message templates</h1><a class="btn btn-primary" href="{{ route('templates.create') }}">New template</a></div><div class="list-group">@forelse($items as $item)<a class="list-group-item list-group-item-action" href="{{ route('templates.edit',$item) }}"><strong>{{ $item->name }}</strong><div class="small text-muted text-truncate">{{ $item->body }}</div></a>@empty<div class="text-muted">No templates yet.</div>@endforelse</div>{{ $items->links() }}@endsection

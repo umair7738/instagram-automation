@@ -1,0 +1,50 @@
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment files and local credentials.
+.env
+.env.*
+!.env.example
+/auth.json
+
+# Dependencies and generated frontend files.
+/vendor
+/node_modules
+/tools/cloudflared
+/public/build
+/public/hot
+/public/storage
+
+# Laravel runtime data.
+/storage/*.key
+/storage/app/*
+!/storage/app/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/pail
+
+# Local databases and test artifacts.
+/database/*.sqlite
+/.phpunit.cache
+/.phpunit.result.cache
+
+# IDE and local tooling files.
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+/.phpactor.json
+/.codex
+
+Homestead.json
+Homestead.yaml
