@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\MessageTemplate;
+use App\Support\StarterExamples;
 use Illuminate\Http\Request;
 
 class MessageTemplateController extends Controller
 {
-    public function index()
+    public function index(StarterExamples $examples)
     {
-        return view('templates.index', ['items' => MessageTemplate::latest()->paginate(15)]);
+        return view('templates.index', [
+            'items' => MessageTemplate::latest()->paginate(15),
+            'examples' => $examples->templates(),
+        ]);
     }
 
     public function create()
@@ -46,6 +50,20 @@ class MessageTemplateController extends Controller
         MessageTemplate::findOrFail($id)->delete();
 
         return back()->with('success', 'Template deleted.');
+    }
+
+    public function duplicateExample(string $key, StarterExamples $examples)
+    {
+        $example = $examples->template($key);
+        abort_unless($example, 404);
+
+        $template = MessageTemplate::create([
+            'name' => $example['name'].' (draft)',
+            'body' => $example['body'],
+            'is_active' => false,
+        ]);
+
+        return redirect()->route('templates.edit', $template)->with('success', 'Starter template copied as a paused draft.');
     }
 
     private function data(Request $r): array

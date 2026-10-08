@@ -7,23 +7,24 @@
     <div>
         <div class="eyebrow mb-2">Delivery center</div>
         <h1 class="page-title h2 mb-2">Automation activity</h1>
-        <p class="page-subtitle mb-0">Trace every rule match from the incoming webhook to the outgoing Instagram action.</p>
+        <p class="page-subtitle mb-0">See each comment, the public reply, and the private DM as separate delivery results.</p>
     </div>
     <a class="btn btn-primary" href="{{ route('rules.create') }}">Create automation</a>
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="metric-label">Executions</div><div class="metric-value mt-2">{{ number_format($counts['executions']) }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="metric-label">Outgoing actions</div><div class="metric-value mt-2">{{ number_format($counts['messages']) }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="metric-label">Webhooks</div><div class="metric-value mt-2">{{ number_format($counts['webhooks']) }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="metric-label">Comments received</div><div class="metric-value mt-2">{{ number_format($counts['comments']) }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="metric-label">Public replies sent</div><div class="metric-value mt-2">{{ number_format($counts['public_replies']) }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="metric-label">Private DMs sent</div><div class="metric-value mt-2">{{ number_format($counts['private_messages']) }}</div></div></div></div>
     <div class="col-6 col-lg-3"><div class="card h-100 {{ $counts['failed'] ? 'border-danger-subtle' : '' }}"><div class="card-body"><div class="metric-label">Failed / blocked</div><div class="metric-value mt-2 {{ $counts['failed'] ? 'text-danger' : '' }}">{{ number_format($counts['failed']) }}</div></div></div></div>
 </div>
 
 <div class="card">
     <div class="card-header bg-white px-3 pt-3 pb-0">
         <ul class="nav nav-tabs border-0" aria-label="Activity type">
+            <li class="nav-item"><a class="nav-link {{ $view === 'comments' ? 'active' : '' }}" href="{{ route('activity.index', ['view' => 'comments']) }}">Comments</a></li>
             <li class="nav-item"><a class="nav-link {{ $view === 'executions' ? 'active' : '' }}" href="{{ route('activity.index', ['view' => 'executions']) }}">Executions</a></li>
-            <li class="nav-item"><a class="nav-link {{ $view === 'messages' ? 'active' : '' }}" href="{{ route('activity.index', ['view' => 'messages']) }}">Outgoing actions</a></li>
+            <li class="nav-item"><a class="nav-link {{ $view === 'messages' ? 'active' : '' }}" href="{{ route('activity.index', ['view' => 'messages']) }}">Delivery details <span class="visually-hidden">Outgoing actions</span></a></li>
             <li class="nav-item"><a class="nav-link {{ $view === 'webhooks' ? 'active' : '' }}" href="{{ route('activity.index', ['view' => 'webhooks']) }}">Webhooks</a></li>
         </ul>
     </div>
@@ -45,7 +46,67 @@
         </form>
     </div>
 
-    @if($view === 'executions')
+    @if($view === 'comments')
+        <div class="alert alert-light border-0 rounded-0 border-bottom mb-0 small">
+            Each row is one incoming Instagram comment. Public replies are visible under the comment; private replies are tracked as DMs. A failed DM does not hide a successful public reply.
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Commenter</th><th>Comment</th><th>Reel / post</th><th>Public reply</th><th>Private DM</th><th>Received</th></tr></thead>
+                <tbody>
+                @forelse($comments as $comment)
+                    @php
+                        $commentMessages = $comment->execution?->outgoingMessages ?? collect();
+                        $publicReply = $commentMessages->firstWhere('type', 'public_comment_reply');
+                        $privateReply = $commentMessages->first(fn ($message) => in_array($message->type, ['private_comment_reply', 'direct_message'], true));
+                        $commentText = data_get($comment->payload, 'text') ?? data_get($comment->payload, 'message') ?? 'Comment text not captured';
+                        $statusTone = fn ($message) => match ($message?->status) { 'sent', 'completed' => 'ready', 'queued', 'processing' => 'working', 'failed', 'blocked' => 'warning', default => 'neutral' };
+                    @endphp
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">{{ $comment->contact?->username ? '@'.$comment->contact->username : ($comment->contact?->name ?? 'Unknown commenter') }}</div>
+                            <div class="small text-muted">{{ $comment->contact?->instagram_scoped_id ?? data_get($comment->payload, 'from.id') ?? 'No user ID' }}</div>
+                        </td>
+                        <td style="min-width:240px; max-width:360px">
+                            <div>{{ \Illuminate\Support\Str::limit($commentText, 140) }}</div>
+                            <div class="small text-muted">Comment #{{ $comment->source_comment_id ?? $comment->id }}</div>
+                        </td>
+                        <td>
+                            @if($comment->media?->permalink)
+                                <a href="{{ $comment->media->permalink }}" target="_blank" rel="noopener">{{ $comment->media->name }}</a>
+                            @else
+                                <span>{{ $comment->media?->name ?? $comment->source_media_id ?? 'Unknown media' }}</span>
+                            @endif
+                            @if($comment->rule)<div class="small text-muted">Rule: {{ $comment->rule->name }}</div>@endif
+                        </td>
+                        <td>
+                            @if($publicReply)
+                                <span class="badge-status status-{{ $statusTone($publicReply) }}">{{ str_replace('_', ' ', $publicReply->status) }}</span>
+                                <div class="small text-muted mt-1">{{ \Illuminate\Support\Str::limit($publicReply->body, 70) }}</div>
+                                @if($publicReply->status === 'failed')<div class="small text-danger mt-1">Not delivered</div>@endif
+                            @else
+                                <span class="small text-muted">Not configured</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($privateReply)
+                                <span class="badge-status status-{{ $statusTone($privateReply) }}">{{ str_replace('_', ' ', $privateReply->status) }}</span>
+                                <div class="small text-muted mt-1">{{ \Illuminate\Support\Str::limit($privateReply->body, 70) }}</div>
+                                @if($privateReply->status === 'failed')<div class="small text-danger mt-1">Check Meta DM permissions</div>@endif
+                            @else
+                                <span class="small text-muted">Not configured</span>
+                            @endif
+                        </td>
+                        <td class="small text-muted text-nowrap">{{ ($comment->occurred_at ?? $comment->created_at)?->format('M j, Y g:i A') }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6"><div class="empty-state"><strong>No Instagram comments found</strong><div class="mt-1">Add a comment to a media item that has an active rule, then refresh this page.</div></div></td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white">{{ $comments->links() }}</div>
+    @elseif($view === 'executions')
         <div class="table-responsive">
             <table class="table align-middle mb-0">
                 <thead><tr><th>Rule and source</th><th>Contact</th><th>Status</th><th>Outgoing actions</th><th>Started</th></tr></thead>

@@ -9,10 +9,11 @@ use App\Models\Interaction;
 use App\Models\OutgoingMessage;
 use App\Models\WebhookEvent;
 use App\Support\AutomationHealth;
+use App\Support\SetupGuide;
 
 class DashboardController extends Controller
 {
-    public function __invoke(AutomationHealth $health)
+    public function __invoke(AutomationHealth $health, SetupGuide $setupGuide)
     {
         $messageCounts = OutgoingMessage::query()
             ->selectRaw('status, count(*) as total')
@@ -31,6 +32,7 @@ class DashboardController extends Controller
             'events' => WebhookEvent::with('account')->latest()->take(6)->get(),
             'recentExecutions' => AutomationExecution::with(['rule', 'contact', 'outgoingMessages'])->latest()->take(6)->get(),
             'health' => $health->summary(),
+            'setup' => $setupGuide->summary(),
         ]);
     }
 }

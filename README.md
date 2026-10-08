@@ -186,9 +186,13 @@ The short version is:
 
 Do not test by opening the webhook URL in a normal browser. Meta's **Verify and save** action sends the verification request; Meta's webhook **Test** action and real Instagram activity send event POST requests.
 
+The exact permission matrix is documented in [docs/META_SETUP.md](docs/META_SETUP.md). For the default **Connect with Meta** flow, media import uses instagram_basic; Page discovery uses pages_show_list and pages_read_engagement; comments use instagram_manage_comments; and private replies/DMs use instagram_manage_messages. The optional Instagram Login flow uses the separate instagram_business_* permission names.
+
 Meta may require App Review, Advanced Access, business verification, and Live mode before private messaging works for people who are not app testers. This is a Meta access requirement, not a Laravel setting. Public comment webhooks and public replies can be tested separately.
 
 ## 10. Connect Instagram in the application
+
+For a guided first-run walkthrough inside the product, open the **Setup guide**. For a task-by-task user guide, see [docs/USING_THE_APPLICATION.md](docs/USING_THE_APPLICATION.md).
 
 1. Open the application's **Accounts** page.
 2. Click **Connect with Meta**.

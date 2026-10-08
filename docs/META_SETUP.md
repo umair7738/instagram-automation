@@ -15,6 +15,42 @@ Do not combine the two options. The default application button uses the first op
 
 If you only want to use the blue **Connect with Meta** button, follow sections 1 through 8 in order. Leave the optional `META_INSTAGRAM_*` values empty. Use section 9 after the account appears in the application. Read section 10 before promising private DMs, because Meta may require approval that the code cannot grant.
 
+## Permission checklist
+
+The permission names depend on the login option. Do not replace one family with the other.
+
+### Default: Connect with Meta (Facebook Login for Business)
+
+| Permission | Why this application requests it | Needed for media import? |
+| --- | --- | --- |
+| instagram_basic | Reads the Professional Instagram account profile and its media list. | Yes |
+| pages_show_list | Finds the Facebook Pages managed by the person connecting the account. | Needed for the Page connection step |
+| pages_read_engagement | Reads the Page's connected Instagram Professional account details. | Needed for the Page connection step |
+| pages_manage_metadata | Allows the app to manage the Page webhook subscription used for feed/comment events. | No |
+| instagram_manage_comments | Receives and handles Instagram comment events and public comment replies. | No |
+| instagram_manage_messages | Enables private comment replies and Instagram DMs when Meta grants access. | No; required for messaging |
+| business_management | Used by the Facebook Login for Business setup when Meta requires business asset selection. | No |
+
+For selecting Reels or posts, the important permission is instagram_basic, together with the Page discovery permissions needed by this Facebook Login flow. Adding messaging permissions will not fix a media-import error.
+
+### Optional: Connect with Instagram Login
+
+| Permission | Why it is used |
+| --- | --- |
+| instagram_business_basic | Reads the Instagram Professional account profile and media list. |
+| instagram_business_manage_comments | Receives and handles comment events and public comment replies. |
+| instagram_business_manage_messages | Enables private replies and DMs when Meta grants access. |
+
+Instagram Login does not use the Page permissions or business_management for this application flow. Meta's current Instagram Login documentation uses the instagram_business_* names. See [Instagram API with Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login) and [Instagram API with Facebook Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login).
+
+### Where to check them in Meta
+
+Open the Meta app and go to **Use cases → Customize** or **App Review → Permissions and features**. The exact labels vary by Meta app type. Confirm that the permissions for the selected login option are present and that the app role/tester has granted them.
+
+An app in Development mode can use permissions for approved app roles and accepted testers. Production users may require Advanced Access, App Review, business verification, and Live mode. A permission appearing in the dashboard does not mean Meta has granted production access.
+
+After changing permissions, reconnect the account in the application. Existing access tokens do not gain newly added permissions automatically.
+
 ## What you need before you start
 
 Have these ready:

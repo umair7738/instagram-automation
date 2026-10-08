@@ -6,13 +6,17 @@ use App\Models\AutomationRule;
 use App\Models\InstagramAccount;
 use App\Models\MediaResource;
 use App\Models\MessageTemplate;
+use App\Support\StarterExamples;
 use Illuminate\Http\Request;
 
 class AutomationRuleController extends Controller
 {
-    public function index()
+    public function index(StarterExamples $examples)
     {
-        return view('rules.index', ['rules' => AutomationRule::with(['media', 'template', 'resource', 'account'])->latest()->paginate(15)]);
+        return view('rules.index', [
+            'rules' => AutomationRule::with(['media', 'template', 'resource', 'account'])->latest()->paginate(15),
+            'examples' => $examples->rules(),
+        ]);
     }
 
     public function create()
@@ -49,6 +53,32 @@ class AutomationRuleController extends Controller
         AutomationRule::findOrFail($id)->delete();
 
         return back()->with('success', 'Rule deleted.');
+    }
+
+    public function duplicateExample(string $key, StarterExamples $examples)
+    {
+        $example = $examples->rule($key);
+        abort_unless($example, 404);
+
+        $templateId = null;
+        if ($example['template']) {
+            $templateId = MessageTemplate::create([
+                'name' => $example['template']['name'].' (draft)',
+                'body' => $example['template']['body'],
+                'is_active' => false,
+            ])->id;
+        }
+
+        $rule = AutomationRule::create([
+            'name' => $example['name'].' (draft)',
+            'trigger_type' => 'comment_keyword',
+            'keyword' => $example['keyword'],
+            'public_reply' => $example['public_reply'],
+            'message_template_id' => $templateId,
+            'is_active' => false,
+        ]);
+
+        return redirect()->route('rules.edit', $rule)->with('success', 'Starter automation copied as a paused draft. Choose its account and media before activating it.');
     }
 
     private function form(AutomationRule $rule): array

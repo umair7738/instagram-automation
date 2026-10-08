@@ -8,6 +8,25 @@ use Illuminate\Support\Facades\Http;
 
 class MetaGraphClient
 {
+    public function listMedia(InstagramAccount $account): array
+    {
+        $baseUrl = $account->auth_mode === 'instagram_login'
+            ? config('meta.instagram_api_base_url')
+            : config('meta.api_base_url');
+        $version = $account->auth_mode === 'instagram_login'
+            ? config('meta.instagram_graph_version')
+            : config('meta.graph_version');
+
+        return Http::baseUrl($baseUrl)
+            ->withToken((string) $account->access_token)
+            ->get('/'.$version.'/'.$account->instagram_user_id.'/media', [
+                'fields' => 'id,permalink,caption,media_type,media_product_type,media_url,thumbnail_url,timestamp',
+                'limit' => 25,
+            ])
+            ->throw()
+            ->json('data', []);
+    }
+
     public function send(OutgoingMessage $message, InstagramAccount $account): array
     {
         $path = match ($message->type) {

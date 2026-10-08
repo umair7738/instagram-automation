@@ -9,6 +9,7 @@ use App\Http\Controllers\MediaResourceController;
 use App\Http\Controllers\MessageTemplateController;
 use App\Http\Controllers\MetaOAuthController;
 use App\Http\Controllers\MetaWebhookController;
+use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -26,10 +27,14 @@ Route::view('terms-of-service', 'legal.terms-of-service')->name('terms-of-servic
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('setup', [SetupController::class, 'index'])->name('setup.index');
     Route::get('activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::resource('accounts', InstagramAccountController::class)->except('show');
+    Route::get('resources/instagram-media', [MediaResourceController::class, 'instagramMedia'])->name('resources.instagram-media');
     Route::resource('resources', MediaResourceController::class)->except('show');
+    Route::post('templates/examples/{key}', [MessageTemplateController::class, 'duplicateExample'])->name('templates.examples.duplicate');
     Route::resource('templates', MessageTemplateController::class)->except('show');
+    Route::post('rules/examples/{key}', [AutomationRuleController::class, 'duplicateExample'])->name('rules.examples.duplicate');
     Route::resource('rules', AutomationRuleController::class)->except('show');
     Route::get('meta/connect', [MetaOAuthController::class, 'start'])->name('meta.oauth.start');
     Route::get('meta/callback', [MetaOAuthController::class, 'callback'])->name('meta.oauth.callback');

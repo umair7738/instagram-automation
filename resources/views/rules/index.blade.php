@@ -5,6 +5,7 @@
     <div><div class="eyebrow mb-2">Automation builder</div><h1 class="page-title h2 mb-2">Automation rules</h1><p class="page-subtitle mb-0">Choose what triggers an automation and what Instagram should receive in response.</p></div>
     <a class="btn btn-primary" href="{{ route('rules.create') }}">Create automation</a>
 </div>
+<div class="card border-primary-subtle bg-primary-subtle mb-4"><div class="card-body p-4"><div class="d-flex flex-column flex-lg-row justify-content-between gap-3"><div><h2 class="h5 mb-2">Starter examples</h2><p class="small text-muted mb-0">Copy a paused automation to see how a keyword, public reply, and optional message template fit together.</p></div><a class="btn btn-sm btn-outline-primary align-self-start" href="{{ route('setup.index') }}">View setup guide</a></div><div class="row g-3 mt-1">@foreach($examples as $example)<div class="col-md-6"><div class="bg-white rounded-3 border p-3 h-100"><div class="fw-semibold">{{ $example['name'] }}</div><p class="small text-muted mt-2 mb-2">{{ $example['description'] }}</p><div class="small mb-1"><strong>Keyword:</strong> {{ $example['keyword'] }}</div><div class="small mb-3"><strong>Public reply:</strong> {{ $example['public_reply'] }}</div><form method="post" action="{{ route('rules.examples.duplicate', $example['key']) }}">@csrf<button class="btn btn-sm btn-outline-primary">Use this example</button></form></div></div>@endforeach</div></div></div>
 <div class="card">
     <div class="table-responsive">
         <table class="table align-middle mb-0">
@@ -27,7 +28,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6"><div class="empty-state"><div class="icon-tile mx-auto mb-3">R</div><strong>No automation rules yet</strong><div class="mt-1 mb-3">Create your first comment or inbound DM workflow.</div><a class="btn btn-primary" href="{{ route('rules.create') }}">Create automation</a></div></td></tr>
+                <tr><td colspan="6"><div class="empty-state"><div class="icon-tile mx-auto mb-3">R</div><strong>No automation rules yet</strong><div class="mt-1 mb-2">A rule connects an incoming comment or message to a response. Start with a paused example above, then choose your account and media.</div><a class="btn btn-primary" href="{{ route('rules.create') }}">Create automation</a></div></td></tr>
             @endforelse
             </tbody>
         </table>

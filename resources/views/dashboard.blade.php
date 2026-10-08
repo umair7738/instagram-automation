@@ -3,13 +3,15 @@
 @section('title', 'Overview · Instagram Automation')
 
 @section('content')
-<div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+<div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4" data-tour-target="overview">
     <div>
         <div class="eyebrow mb-2">Workspace overview</div>
         <h1 class="page-title h2 mb-2">Your automation at a glance</h1>
         <p class="page-subtitle mb-0">Monitor incoming Instagram events, rule matches and message delivery from one place.</p>
     </div>
     <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{{ route('setup.index') }}">Setup guide</a>
+        <button class="btn btn-outline-secondary" type="button" data-tour-start>Take a tour</button>
         <a class="btn btn-outline-secondary" href="{{ route('activity.index') }}">View activity</a>
         <a class="btn btn-primary" href="{{ route('rules.create') }}">Create automation</a>
     </div>
@@ -24,7 +26,7 @@
     ];
 @endphp
 
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4" id="overview-metrics" data-tour-target="metrics">
     @foreach($metrics as $metric)
         <div class="col-6 col-xl-3">
             <a class="card metric-card h-100" href="{{ $metric['route'] }}">
@@ -76,7 +78,7 @@
         </div>
     </div>
 
-    <div class="col-xl-5">
+    <div class="col-xl-5" data-tour-target="health">
         <div class="card h-100">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
                 <div>
@@ -102,7 +104,7 @@
     </div>
 </div>
 
-<div class="card mt-4">
+<div class="card mt-4" data-tour-target="activity">
     <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
         <div>
             <h2 class="h5 mb-1">Recent webhook deliveries</h2>
