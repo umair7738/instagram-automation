@@ -1,6 +1,6 @@
 # Local development
 
-The complete setup, Meta configuration, webhook verification, and troubleshooting guide is in the project [README.md](../README.md).
+The complete setup and Meta configuration guide is in [README.md](../README.md). For detailed diagnostics, use [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 For a local run, use three terminals:
 
